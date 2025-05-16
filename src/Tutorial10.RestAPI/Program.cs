@@ -1,11 +1,21 @@
+
+using Microsoft.EntityFrameworkCore;
+using Tutorial10.RestAPI;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("No connection string");
+builder.Services.AddDbContext<S30062Context>(options => options.UseSqlServer(connectionString));
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+
+
 var app = builder.Build();
+app.UseHttpsRedirection();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -16,7 +26,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/jobs", () => {
+app.MapGet("/api/jobs", (SampleCompanyContext context, CancellationToken token) => {
+    try
+    {
+        return Results.Ok(await context.Jobs.ToListAsync(token));
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
     
 });
 
